@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+
+
+<script type="text/javascript" src="https://static.robotwebtools.org/threejs/current/three.min.js"></script>
+<script type="text/javascript" src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+<script type="text/javascript" src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+<script type="text/javascript" src="https://static.robotwebtools.org/ros3djs/current/ros3d.min.js"></script>
+<script src="http://static.robotwebtools.org/threejs/current/three.js"></script>
+<script src="http://static.robotwebtools.org/threejs/current/STLLoader.js"></script>
+<script src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+<script src="http://static.robotwebtools.org/roslibjs/current/roslib.js"></script>
+<script src="{{url_for('static', filename='js/ros3d.js')}}"></script>
+<script src="{{url_for('static', filename='js/ColladaLoader.js')}}"></script>
+
+<script>
+  /**
+   * Setup all visualization elements when the page is loaded.
+   */
+  function init() {
+    // Connect to ROS.
+    var ros = new ROSLIB.Ros({
+      url : 'ws://localhost:9090'
+    });
+    
+
+    // Create the main viewer.
+    var viewer = new ROS3D.Viewer({
+      divID : 'iiwa_urdf',
+      width : 800,
+      height : 600,
+      antialias : true
+    });
+
+    // Add a grid.
+    // show the x y axis
+    viewer.addObject(new ROS3D.Grid());
+
+    // Setup a client to listen to TFs.
+    // A TF Client that listens to TFs from tf2_web_republisher
+    var tfClient = new ROSLIB.TFClient({
+      ros : ros,
+      // fixed frame, /base_link is the default link, since iiwa_stack will be used
+      // so it has to be changed
+      //fixedFrame: 'world',
+      // angular threshold for the TF republisher
+      angularThres : 0.01,
+      // translation threshhold for the TF republisher
+      transThres : 0.01,
+      // rate for the TF republisher
+      rate : 10.0,
+      // the goal update delay for the TF republisher
+      //goalUpdateDelay: 10
+
+    });
+
+    // Setup the URDF client.
+    // create ROS3D.UrdfClient
+    // path: provide the source of urdf，package://localPath or meshed，: package:///body/meshed/body.dae
+    // or using http://, 如 http://localhost:8000/body/meshed/body.dae
+    // the loader will use robot_description as URDF model
+    // loader can use to kinds of Collada Loader， PR2 robot ussed ColladalLoader2, other robot model ColladaLoader THREE.js(ROS3D.COLLADA_LOADER)
+    var urdfClient = new ROS3D.UrdfClient({
+      ros : ros,
+      tfClient : tfClient,
+      path: 'http://127.0.0.1:5000/static/model2/ur5.urdf.xacro',
+      //path: 'iiwa_stack',
+      // the root object to add this marker to
+      rootObject : viewer.scene,
+      //loader:ColladalLoader2
+      loader: ROS3D.COLLADA_LOADER
+    });
+
+
+  }
+</script>
+</head>
+
+<body onload="init()">
+  <h1>iiwa URDF Example</h1>
+  <p>Run the following commands in the terminal then refresh this page.</p>
+  
+  <div id="iiwa_urdf"></div>
+</body>
+</html>
